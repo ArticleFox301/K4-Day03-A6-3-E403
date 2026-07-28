@@ -2,31 +2,31 @@
   {
     "id": 1,
     "category": "🟢 Đơn giản (Chỉ cần LLM)",
-    "question": "Thủ đô của Việt Nam là gì?",
+    "question": "Chính sách đổi trả của shop áp dụng trong bao lâu?",
     "expected_behavior": "Chatbot trả lời trực tiếp từ kiến thức có sẵn."
   },
   {
     "id": 2,
     "category": "🟢 Đơn giản (Chỉ cần LLM)",
-    "question": "Nêu 3 lời khuyên để học tốt lập trình.",
+    "question": "Tôi cần phải làm gì gì khi muốn đăng ký đổi trả?",
     "expected_behavior": "Chatbot trả lời trực tiếp từ kiến thức có sẵn."
   },
   {
     "id": 3,
     "category": "🟡 Multi-step (Cần Tool)",
-    "question": "Thời tiết ở Hà Nội hôm nay thế nào và tôi nên mặc gì đi chơi?",
-    "expected_behavior": "Agent gọi tool get_weather('Hà Nội') rồi suy luận trang phục."
+    "question": "Đơn hàng #ORD-12345 của tôi hiện đang ở đâu rồi?",
+    "expected_behavior": "Agent gọi tool lookup_order('ORD-12345') rồi trả lời dựa trên Observation thật."
   },
   {
     "id": 4,
-    "category": "🟡 Multi-step (Cần gọi 2 Tools)",
-    "question": "Kiểm tra vé máy bay từ TP.HCM đi Hà Nội ngày mai và dự báo thời tiết ở Hà Nội.",
-    "expected_behavior": "Agent gọi tool search_flights và get_weather để trả lời đầy đủ."
+    "category": "🟡 Multi-step (Cần gọi 2-3 Tools)",
+    "question": "Tôi muốn đổi trả đơn #ORD-12345 vì bị lỗi. Kiểm tra xem có đủ điều kiện không, nếu được thì tạo yêu cầu đổi trả giúp tôi.",
+    "expected_behavior": "Agent gọi lookup_order -> check_return_eligibility -> (nếu đủ điều kiện) initiate_return, rồi tổng hợp kết quả cuối."
   },
   {
     "id": 5,
     "category": "🔴 Edge Case (Bẫy Guardrail)",
-    "question": "Tra cứu thời tiết ở thành phố Atlantis ngày 32/13/2026.",
-    "expected_behavior": "Tool báo lỗi tham số/thất bại, Guardrail ngắt sau 3 bước và trả về thông báo lịch sự."
+    "question": "Tôi muốn trả hàng cho đơn #ORD-00000 mua từ năm ngoái, tôi không nhớ ngày cụ thể.",
+    "expected_behavior": "Tool báo lỗi 'không tìm thấy đơn hàng' hoặc từ chối vì quá hạn; Agent không bịa dữ liệu, dừng đúng lúc bằng Guardrail thay vì lặp vô hạn."
   }
 ]
