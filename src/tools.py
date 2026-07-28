@@ -1,6 +1,19 @@
 """
 🛠️ TOOL REGISTRY & SCHEMAS (Dành cho Role 2: Tool & Spec Engineer)
 Nơi khai báo tất cả các "món đồ nghề" mà ReAct Agent có thể gọi.
+
+📍 MỐC 1 — KẾ HOẠCH TOOL (Chủ đề #5: Trợ Lý Tra Cứu Đơn Hàng & Xử Lý Đổi Trả)
+Danh sách tool dự kiến sẽ implement ở Mốc 2/3 (chưa code ở Mốc 1):
+
+1. lookup_order(order_id: str) -> str
+   Tra cứu trạng thái đơn hàng (đang giao / đã giao / đã hủy, ngày đặt, ngày giao).
+
+2. check_return_eligibility(order_id: str) -> str
+   Kiểm tra đơn hàng có đủ điều kiện đổi/trả không (còn trong hạn 30 ngày kể từ
+   ngày giao, sản phẩm thuộc diện được đổi trả).
+
+3. initiate_return(order_id: str, reason: str) -> str
+   Tạo yêu cầu đổi/trả cho đơn hàng (side effect thật, không chỉ tra cứu).
 """
 
 def get_weather(location: str) -> str:
