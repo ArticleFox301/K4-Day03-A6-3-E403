@@ -140,7 +140,7 @@ def initiate_return(order_id: str, reason: str) -> str:
     )
 
 
-# Danh sách các tool được đăng ký để Agent sử dụng
+# Danh sách các tool đăng ký sẵn cho ReAct Agent trong Đề tài 5
 AVAILABLE_TOOLS = {
     "lookup_order": lookup_order,
     "check_return_eligibility": check_return_eligibility,
