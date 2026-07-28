@@ -14,6 +14,18 @@ from datetime import date, datetime
 TODAY = date(2026, 7, 28)
 RETURN_WINDOW_DAYS = 7
 
+def _normalize_order_id(order_id: str) -> str:
+    """
+    Chuẩn hóa mã đơn hàng do LLM truyền vào, vì Agent có thể viết dưới nhiều
+    dạng khác nhau (vd: "order_id=#ORD-12345", "#ORD-12345", " ord-12345 ").
+    Bỏ tiền tố "ten_tham_so=" nếu có, bỏ dấu '#', khoảng trắng thừa, rồi in hoa.
+    """
+    clean = order_id.strip()
+    if "=" in clean:
+        clean = clean.rsplit("=", 1)[-1]
+    return clean.strip().lstrip("#").strip().upper()
+
+
 MOCK_ORDERS = {
     "ORD-12345": {
         "status": "Đã giao",
@@ -52,14 +64,15 @@ def lookup_order(order_id: str) -> str:
         >>> lookup_order("ORD-12345")
         "Đơn hàng ORD-12345: Đã giao ngày 2026-07-22. Sản phẩm: Áo thun nam Size M (250,000 VNĐ)."
     """
-    order = MOCK_ORDERS.get(order_id.strip().upper())
+    clean_id = _normalize_order_id(order_id)
+    order = MOCK_ORDERS.get(clean_id)
     if not order:
         return f"LỖI: Không tìm thấy đơn hàng '{order_id}'. Vui lòng kiểm tra lại mã đơn."
 
     items_str = ", ".join(f"{item['name']} ({item['price']:,} VNĐ)" for item in order["items"])
     if order["status"] == "Đã giao":
-        return f"Đơn hàng {order_id.upper()}: Đã giao ngày {order['delivered_date']}. Sản phẩm: {items_str}."
-    return f"Đơn hàng {order_id.upper()}: {order['status']}. Sản phẩm: {items_str}."
+        return f"Đơn hàng {clean_id}: Đã giao ngày {order['delivered_date']}. Sản phẩm: {items_str}."
+    return f"Đơn hàng {clean_id}: {order['status']}. Sản phẩm: {items_str}."
 
 
 def check_return_eligibility(order_id: str, reason: str = "") -> str:
@@ -82,13 +95,14 @@ def check_return_eligibility(order_id: str, reason: str = "") -> str:
         >>> check_return_eligibility("ORD-88219", "Rách khuy")
         "ĐỦ ĐIỀU KIỆN ĐỔI TRẢ: Đơn hàng ORD-88219 giao 2 ngày trước, còn trong thời hạn 7 ngày. Lý do: 'Rách khuy'."
     """
-    order = MOCK_ORDERS.get(order_id.strip().upper())
+    clean_id = _normalize_order_id(order_id)
+    order = MOCK_ORDERS.get(clean_id)
     if not order:
         return f"LỖI: Không tìm thấy đơn hàng '{order_id}' để kiểm tra điều kiện đổi trả."
 
     if order["status"] != "Đã giao":
         return (
-            f"KHÔNG ĐỦ ĐIỀU KIỆN ĐỔI TRẢ: Đơn hàng {order_id.upper()} chưa được giao "
+            f"KHÔNG ĐỦ ĐIỀU KIỆN ĐỔI TRẢ: Đơn hàng {clean_id} chưa được giao "
             f"(trạng thái hiện tại: {order['status']})."
         )
 
@@ -97,13 +111,13 @@ def check_return_eligibility(order_id: str, reason: str = "") -> str:
 
     if days_passed > RETURN_WINDOW_DAYS:
         return (
-            f"KHÔNG ĐỦ ĐIỀU KIỆN ĐỔI TRẢ: Đơn hàng {order_id.upper()} đã giao được {days_passed} ngày, "
+            f"KHÔNG ĐỦ ĐIỀU KIỆN ĐỔI TRẢ: Đơn hàng {clean_id} đã giao được {days_passed} ngày, "
             f"vượt quá thời hạn đổi trả {RETURN_WINDOW_DAYS} ngày."
         )
 
     reason_str = reason.strip() if reason and reason.strip() else "không nêu rõ"
     return (
-        f"ĐỦ ĐIỀU KIỆN ĐỔI TRẢ: Đơn hàng {order_id.upper()} giao {days_passed} ngày trước, "
+        f"ĐỦ ĐIỀU KIỆN ĐỔI TRẢ: Đơn hàng {clean_id} giao {days_passed} ngày trước, "
         f"còn trong thời hạn {RETURN_WINDOW_DAYS} ngày. Lý do: '{reason_str}'."
     )
 
@@ -128,14 +142,15 @@ def initiate_return(order_id: str, reason: str) -> str:
         >>> initiate_return("ORD-88219", "Rách khuy")
         "ĐÃ TẠO YÊU CẦU ĐỔI TRẢ: Mã vé RET-88219 cho đơn ORD-88219. Lý do: 'Rách khuy'. Số tiền hoàn dự kiến: 450,000 VNĐ."
     """
-    order = MOCK_ORDERS.get(order_id.strip().upper())
+    clean_id = _normalize_order_id(order_id)
+    order = MOCK_ORDERS.get(clean_id)
     if not order:
         return f"LỖI: Không thể tạo yêu cầu đổi trả — đơn hàng '{order_id}' không tồn tại."
 
     refund_amount = sum(item["price"] for item in order["items"])
-    ticket_id = f"RET-{order_id.upper().replace('ORD-', '')}"
+    ticket_id = f"RET-{clean_id.replace('ORD-', '')}"
     return (
-        f"ĐÃ TẠO YÊU CẦU ĐỔI TRẢ: Mã vé {ticket_id} cho đơn {order_id.upper()}. "
+        f"ĐÃ TẠO YÊU CẦU ĐỔI TRẢ: Mã vé {ticket_id} cho đơn {clean_id}. "
         f"Lý do: '{reason}'. Số tiền hoàn dự kiến: {refund_amount:,} VNĐ."
     )
 
