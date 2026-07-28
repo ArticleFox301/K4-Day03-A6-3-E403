@@ -16,6 +16,35 @@
 
 ---
 
+## 📍 MỐC 3 — TRACE LOG THẬT (Thought → Action → Observation)
+
+*Chạy thật bằng `python src/app.py`, LLM Provider: Ollama local (`qwen3:4b`, không cần API key). Bộ tool đã đồng bộ về 3-tool: `lookup_order`, `check_return_eligibility`, `initiate_return`.*
+
+### Test Case #3: "Đơn hàng #ORD-12345 của tôi hiện đang ở đâu rồi?"
+
+```
+[REACT AGENT] Câu hỏi: Đơn hàng #ORD-12345 của tôi hiện đang ở đâu rồi?
+
+--- Vòng lặp ReAct (Step 1/4) ---
+Thought: Tôi cần tra cứu trạng thái đơn hàng #ORD-12345 để biết được thông tin hiện tại.
+Action: lookup_order[order_id="ORD-12345"]
+Observation: Đơn hàng ORD-12345: Đã giao ngày 2026-07-22. Sản phẩm: Áo thun nam Size M (250,000 VNĐ).
+
+--- Vòng lặp ReAct (Step 2/4) ---
+Thought: Tôi đã có đủ thông tin để trả lời khách hàng.
+Final Answer: Chào bạn, đơn hàng #ORD-12345 của bạn đã được giao ngày 2026-07-22. Sản phẩm
+trong đơn hàng là Áo thun nam Size M với giá 250,000 VNĐ. Nếu bạn cần thêm thông tin hoặc có
+thắc mắc khác, vui lòng liên hệ với chúng tôi!
+
+[REACT AGENT] Hoàn thành xuất sắc nhiệm vụ. (Dừng ở Step 2/4, không chạm Guardrail)
+```
+
+**Nhận xét**: Agent suy luận đúng cần gọi `lookup_order` trước khi trả lời, Observation lấy từ dữ liệu thật (`MOCK_ORDERS` trong `tools.py`) chứ không bịa, và dừng đúng lúc khi đã đủ bằng chứng.
+
+**Failed trace phát hiện & đã fix (root cause analysis)**: Ở lần chạy đầu tiên, model sinh Action dạng `lookup_order[order_id=#ORD-12345]` (có tiền tố `order_id=` và dấu `#`). Vì `lookup_order()` khi đó tra thẳng khớp chuỗi, nó trả về `LỖI: Không tìm thấy đơn hàng` **sai** (đơn thực ra tồn tại) → Agent kết luận nhầm là khách nhập sai mã. **Root cause**: tool không chuẩn hóa input trước khi tra cứu. **Fix**: thêm hàm `_normalize_order_id()` trong `tools.py` để bỏ tiền tố `key=`, bỏ dấu `#`, trước khi so khớp — áp dụng cho cả 3 tool. Sau khi vá, chạy lại cho kết quả đúng như log ở trên.
+
+---
+
 ## 2. PHÂN TÍCH CHI TIẾT CHECKPOINT 1 (MỐC 1)
 
 ### 2.1 Tại sao bài toán này KHÔNG THỂ giải quyết chỉ bằng Chatbot Baseline (Cấp 2)?

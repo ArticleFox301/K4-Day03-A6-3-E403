@@ -36,18 +36,48 @@ def load_test_cases():
         return json.load(f)
 
 
+def _split_args(raw_args: str):
+    """
+    Tach chuoi tham so theo dau phay, nhung giu nguyen noi dung ben trong
+    dau nhay ('...' hoac "...") lam 1 khoi, ke ca khi ben trong co dau phay
+    (vd: ly do "Rach khuy, giao sai mau").
+    """
+    args = []
+    current = []
+    in_quote = None
+    for ch in raw_args:
+        if in_quote:
+            if ch == in_quote:
+                in_quote = None
+            else:
+                current.append(ch)
+        elif ch in ("'", '"'):
+            in_quote = ch
+        elif ch == ",":
+            args.append("".join(current).strip())
+            current = []
+        else:
+            current.append(ch)
+    if current:
+        args.append("".join(current).strip())
+    return [arg for arg in args if arg]
+
+
 def parse_action(llm_output: str):
     """
     Phan tich cu phap Action tu cau tra loi cua LLM.
     Dang ky vong: Action: ten_cong_cu[tham_so_1, tham_so_2]
     """
     match = re.search(r"Action:\s*(\w+)\[(.*?)\]", llm_output, re.IGNORECASE)
-    if match:
-        tool_name = match.group(1).strip()
-        raw_args = match.group(2).strip()
-        args = [arg.strip(" '\"") for arg in raw_args.split(",") if arg.strip()]
-        return tool_name, args
-    return None, []
+    if not match:
+        return None, []
+
+    tool_name = match.group(1).strip()
+    raw_args = match.group(2).strip()
+    if not raw_args:
+        return tool_name, []
+
+    return tool_name, _split_args(raw_args)
 
 
 def run_baseline_chatbot(user_query: str, provider):
@@ -101,11 +131,23 @@ def run_react_agent(user_query: str, provider):
                 
             print(f"Observation: {obs}")
             conversation_history += f"\n{llm_response}\nObservation: {obs}"
+        elif tool_name:
+            obs = (
+                f"LOI: Tool '{tool_name}' khong ton tai. "
+                f"Cac tool hop le gom: {list(AVAILABLE_TOOLS.keys())}"
+            )
+            print(f"Observation: {obs}")
+            conversation_history += f"\n{llm_response}\nObservation: {obs}"
         else:
             conversation_history += f"\n{llm_response}"
 
-    if step >= MAX_ITERATIONS:
-        print(f"\nGUARDRAIL TRIGGERED: Da dat gioi han toi da {MAX_ITERATIONS} buoc lap. Ngat lap an toan!")
+    fallback = (
+        "Xin loi quy khach, yeu cau nay can them thoi gian xu ly. "
+        "Vui long lien he tong dai ho tro de duoc nhan vien kiem tra truc tiep."
+    )
+    print(f"\nGUARDRAIL TRIGGERED: Da dat gioi han toi da {MAX_ITERATIONS} buoc lap. Ngat lap an toan!")
+    print(f"Final Answer (Safe Fallback): {fallback}")
+    return fallback
 
 
 if __name__ == "__main__":

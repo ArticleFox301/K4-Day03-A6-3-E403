@@ -8,8 +8,8 @@
 | :--- | :--- | :--- | :--- |
 | **Role 1: Product Architect** | `config/test_cases.json` | Định hướng bài toán đơn hàng & soạn 5 test cases chi tiết | Trần Lương Hoàng Anh |
 | **Role 2: Tool Engineer** | `src/tools.py` | Định nghĩa các Tools: `lookup_order`, `check_return_eligibility`, `initiate_return` | Trần Lương Hoàng Anh |
-| **Role 3: Prompt Engineer** | `src/prompts.py` | Viết ReAct System Prompt & Guardrails phanh an toàn | Nguyễn Thị Thu Trang |
-| **Role 4: Core Developer / Integrator** | `src/app.py` | Ghép nối tất cả các phần vào ReAct Agent Loop hoàn chỉnh | Nguyễn Trung Đức |
+| **Role 3: Prompt Engineer** | `src/prompts.py` | Viết ReAct System Prompt & Guardrails phanh an toàn | Nguyễn Trung Đức |
+| **Role 4: Core Developer / Integrator** | `src/app.py` | Ghép nối tất cả các phần vào ReAct Agent Loop hoàn chỉnh | Nguyễn Thị Thu Trang |
 | **Role 5: Observability** | `docs/trace_eval.md` | Lập bảng Scoring Matrix & Soi nhật ký Trace Log | Nguyễn Thị Thu Trang |
 
 ---

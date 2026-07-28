@@ -131,6 +131,51 @@ class OpenRouterProvider(BaseLLMProvider):
             return f"[OpenRouter Exception]: {str(e)}"
 
 
+class OllamaProvider(BaseLLMProvider):
+    """Ollama Local Provider (Chạy model AI cục bộ qua Ollama, không cần API key)"""
+    def __init__(self, model: str = None, base_url: str = None):
+        self.model_name = model or os.getenv("LLM_MODEL") or "qwen3:4b"
+        self.base_url = (base_url or os.getenv("OLLAMA_BASE_URL") or "http://localhost:11434").rstrip("/")
+
+    def generate(self, prompt: str, system_prompt: str = "") -> str:
+        try:
+            messages = []
+            if system_prompt:
+                messages.append({"role": "system", "content": system_prompt})
+            messages.append({"role": "user", "content": prompt})
+
+            res = requests.post(
+                f"{self.base_url}/api/chat",
+                json={"model": self.model_name, "messages": messages, "stream": False},
+                timeout=120,
+            )
+            if res.status_code == 200:
+                return res.json()["message"]["content"]
+            return f"[Ollama API Error {res.status_code}]: {res.text}"
+        except Exception as e:
+            return f"[Ollama Exception]: {str(e)}. Kiểm tra Ollama đã chạy chưa (ollama serve) và model đã pull chưa (ollama pull {self.model_name})."
+
+
+def normalize_gemini_model(name: str) -> str:
+    """Chuẩn hóa tên model Gemini người dùng nhập (bỏ tiền tố 'models/' nếu có)."""
+    name = (name or "").strip()
+    if name.startswith("models/"):
+        name = name[len("models/"):]
+    return name
+
+
+def list_ollama_models(base_url: str = None) -> list:
+    """Liệt kê các model đã pull sẵn trên Ollama local. Trả về [] nếu không kết nối được."""
+    url = (base_url or os.getenv("OLLAMA_BASE_URL") or "http://localhost:11434").rstrip("/")
+    try:
+        res = requests.get(f"{url}/api/tags", timeout=5)
+        if res.status_code == 200:
+            return [m["name"] for m in res.json().get("models", [])]
+    except Exception:
+        pass
+    return []
+
+
 class MockProvider(BaseLLMProvider):
     """Offline Mock Provider (Cho bài test không cần kết nối API)"""
     def generate(self, prompt: str, system_prompt: str = "") -> str:
@@ -152,6 +197,8 @@ def get_llm_provider(provider_name: str = None) -> BaseLLMProvider:
         return AnthropicProvider()
     elif name == "openrouter":
         return OpenRouterProvider()
+    elif name == "ollama":
+        return OllamaProvider()
     else:
         return MockProvider()
 
