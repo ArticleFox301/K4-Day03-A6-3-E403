@@ -107,37 +107,42 @@ def run_react_agent(user_query: str, provider):
         prompt = conversation_history + "\nHay dua ra Thought tiep theo va Action (hoac Final Answer):"
         llm_response = provider.generate(prompt, system_prompt=REACT_SYSTEM_PROMPT)
         print(f"Agent phan hoi:\n{llm_response}")
-        
-        if "Final Answer:" in llm_response:
+
+        tool_name, args = parse_action(llm_response)
+
+        if tool_name:
+            # Neu response co Action, LUON uu tien thuc thi tool that va cat bo
+            # moi noi dung LLM tu sinh SAU Action (ke ca Final Answer/Observation
+            # tu bia trong cung 1 lan generate) - khong bao gio tin Observation
+            # do chinh LLM viet ra.
+            action_match = re.search(r"Action:\s*\w+\[.*?\]", llm_response, re.IGNORECASE)
+            llm_response_clean = llm_response[:action_match.end()] if action_match else llm_response
+
+            if tool_name in AVAILABLE_TOOLS:
+                print(f"Thuc thi Tool: {tool_name} voi tham so {args}")
+                tool_func = AVAILABLE_TOOLS[tool_name]
+                try:
+                    if len(args) == 1:
+                        obs = tool_func(args[0])
+                    elif len(args) == 2:
+                        obs = tool_func(args[0], args[1])
+                    elif len(args) == 3:
+                        obs = tool_func(args[0], args[1], args[2])
+                    else:
+                        obs = tool_func()
+                except Exception as e:
+                    obs = f"LOI THUC THI TOOL {tool_name}: {str(e)}"
+            else:
+                obs = (
+                    f"LOI: Tool '{tool_name}' khong ton tai. "
+                    f"Cac tool hop le gom: {list(AVAILABLE_TOOLS.keys())}"
+                )
+
+            print(f"Observation: {obs}")
+            conversation_history += f"\n{llm_response_clean}\nObservation: {obs}"
+        elif "Final Answer:" in llm_response:
             print("\n[REACT AGENT] Hoan thanh xuat sac nhiem vu.")
             return llm_response
-            
-        tool_name, args = parse_action(llm_response)
-        
-        if tool_name and tool_name in AVAILABLE_TOOLS:
-            print(f"Thuc thi Tool: {tool_name} voi tham so {args}")
-            tool_func = AVAILABLE_TOOLS[tool_name]
-            try:
-                if len(args) == 1:
-                    obs = tool_func(args[0])
-                elif len(args) == 2:
-                    obs = tool_func(args[0], args[1])
-                elif len(args) == 3:
-                    obs = tool_func(args[0], args[1], args[2])
-                else:
-                    obs = tool_func()
-            except Exception as e:
-                obs = f"LOI THUC THI TOOL {tool_name}: {str(e)}"
-                
-            print(f"Observation: {obs}")
-            conversation_history += f"\n{llm_response}\nObservation: {obs}"
-        elif tool_name:
-            obs = (
-                f"LOI: Tool '{tool_name}' khong ton tai. "
-                f"Cac tool hop le gom: {list(AVAILABLE_TOOLS.keys())}"
-            )
-            print(f"Observation: {obs}")
-            conversation_history += f"\n{llm_response}\nObservation: {obs}"
         else:
             conversation_history += f"\n{llm_response}"
 

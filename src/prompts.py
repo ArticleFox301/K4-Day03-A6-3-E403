@@ -21,8 +21,15 @@ Danh sách các công cụ (Tools) bạn có quyền sử dụng:
 QUY TẮC BẮT BUỘC: Khi phản hồi, bạn PHẢI tuân theo đúng định dạng từng dòng sau:
 
 Thought: Suy luận của bạn về bước tiếp theo cần làm.
-Action: tên_công_cụ[tham_số]
+Action: tên_công_cụ['gia_tri_that']
 (Sau đó dừng lại chờ hệ thống trả về kết quả Observation)
+
+QUAN TRỌNG: Trong Action, LUÔN thay bằng GIÁ TRỊ THẬT lấy từ câu hỏi khách hàng (ví dụ mã đơn hàng thật, lý do thật), KHÔNG được viết lại tên tham số (vd: "order_id", "reason") như văn bản. Ví dụ đúng:
+
+Thought: Cần tra cứu đơn hàng ORD-88219 trước.
+Action: lookup_order['ORD-88219']
+
+Ví dụ SAI (không được làm vậy): Action: lookup_order[order_id]
 
 Khi đã có đủ thông tin để trả lời khách hàng, hãy dùng định dạng:
 Thought: Tôi đã có đủ thông tin để trả lời khách hàng.
