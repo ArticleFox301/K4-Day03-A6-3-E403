@@ -7,7 +7,7 @@
 | Vai trò (Role) | File đảm nhận | Nhiệm vụ chính | Phân công nhóm 3 người |
 | :--- | :--- | :--- | :--- |
 | **Role 1: Product Architect** | `config/test_cases.json` | Định hướng bài toán đơn hàng & soạn 5 test cases chi tiết | Nguyễn Thị Thu Trang |
-| **Role 2: Tool Engineer** | `src/tools.py` | Định nghĩa các Tools: `get_order_details`, `check_return_eligibility`, `calculate_refund_amount`, `create_return_ticket` | Thành viên 2 |
+| **Role 2: Tool Engineer** | `src/tools.py` | Định nghĩa các Tools: `get_order_details`, `check_return_eligibility`, `calculate_refund_amount`, `create_return_ticket` | Trần Lương Hoàng Anh |
 | **Role 3: Prompt Engineer** | `src/prompts.py` | Viết ReAct System Prompt & Guardrails phanh an toàn | Trần Lương Hoàng Anh |
 | **Role 4: Core Developer / Integrator** | `src/app.py` | Ghép nối tất cả các phần vào ReAct Agent Loop hoàn chỉnh | Nguyễn Trung Đức |
 | **Role 5: Observability** | `docs/trace_eval.md` | Lập bảng Scoring Matrix & Soi nhật ký Trace Log | Nguyễn Thị Thu Trang |
